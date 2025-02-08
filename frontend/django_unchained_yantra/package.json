@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/jspdf": "^2.0.0",
     "@types/react-datepicker": "^7.0.0",
     "apexcharts": "^4.4.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "lucide": "^0.475.0",
     "lucide-react": "^0.475.0",
     "next": "15.1.6",

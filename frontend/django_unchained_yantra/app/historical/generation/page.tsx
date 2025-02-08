@@ -6,9 +6,12 @@ import {
 } from 'recharts';
 import DatePicker from 'react-datepicker';
 import { Popover } from '@/app/components/Popover';
-import { Download, Settings, AlertCircle, BarChart3, Table2, Filter, Share2 } from 'lucide-react';
+import { Download, Settings, AlertCircle, BarChart3, Table2, Filter, Share2, Search } from 'lucide-react';
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from 'date-fns';
+import { format, addHours, parseISO } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DateRange {
   startDate: Date | null;
@@ -71,20 +74,36 @@ export default function GenerationPage() {
   const [selectedPieSection, setSelectedPieSection] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [generationData] = useState<GenerationData[]>([
-    {
-      timestamp: '2024-03-15 14:00',
-      totalGeneration: 2800,
-      solarGeneration: 800,
-      windGeneration: 600,
-      conventionalGeneration: 1400,
-      renewableContribution: 50,
-      efficiencyScore: 92,
-      hasAnomaly: false
-    },
-    // Add more sample data here
-  ]);
+  // Generate 50 dummy records
+  const generateDummyData = (): GenerationData[] => {
+    const data: GenerationData[] = [];
+    const startDate = new Date('2024-03-15 00:00');
+    
+    for (let i = 0; i < 50; i++) {
+      const timestamp = addHours(startDate, i);
+      const baseGeneration = 2000 + Math.random() * 1500;
+      const solarGen = Math.random() * 1200;
+      const windGen = Math.random() * 1000;
+      const conventionalGen = baseGeneration - (solarGen + windGen);
+      const renewable = ((solarGen + windGen) / baseGeneration) * 100;
+      
+      data.push({
+        timestamp: format(timestamp, "yyyy-MM-dd HH:mm"),
+        totalGeneration: Math.round(baseGeneration),
+        solarGeneration: Math.round(solarGen),
+        windGeneration: Math.round(windGen),
+        conventionalGeneration: Math.round(conventionalGen),
+        renewableContribution: Math.round(renewable * 10) / 10,
+        efficiencyScore: Math.round(85 + Math.random() * 10),
+        hasAnomaly: Math.random() > 0.9 // 10% chance of anomaly
+      });
+    }
+    return data;
+  };
+
+  const [generationData] = useState<GenerationData[]>(generateDummyData());
 
   const pieData = [
     { name: 'Solar', value: 800 },
@@ -130,8 +149,37 @@ export default function GenerationPage() {
     setDateRange({ startDate: start, endDate: end });
   };
 
-  const handleExport = async (format: string) => {
-    // Implementation for export functionality
+  const handleExport = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text('Power Generation Report', 14, 15);
+    
+    // Add timestamp
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 25);
+
+    // Add table
+    const tableData = generationData.map(data => [
+      new Date(data.timestamp).toLocaleString(),
+      data.totalGeneration.toString(),
+      data.solarGeneration.toString(),
+      data.windGeneration.toString(),
+      data.conventionalGeneration.toString(),
+      `${data.renewableContribution}%`,
+      `${data.efficiencyScore}%`
+    ]);
+
+    (doc as any).autoTable({
+      startY: 40,
+      head: [['Time', 'Total (MW)', 'Solar (MW)', 'Wind (MW)', 'Conv. (MW)', 'Renewable %', 'Efficiency']],
+      body: tableData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [44, 100, 91] }
+    });
+
+    doc.save('power-generation-report.pdf');
   };
 
   const energySources = [
@@ -143,6 +191,31 @@ export default function GenerationPage() {
   const handlePieClick = useCallback((data: any) => {
     setSelectedPieSection(selectedPieSection === data.name ? null : data.name);
   }, [selectedPieSection]);
+
+  // Enhanced search function
+  const filteredData = generationData.filter(data => {
+    const searchStr = searchQuery.toLowerCase();
+    const date = parseISO(data.timestamp);
+    const formattedDate = format(date, 'MMMM dd, yyyy'); // March 15, 2024
+    const dayOfWeek = format(date, 'EEEE'); // Monday, Tuesday, etc.
+    const timeStr = format(date, 'HH:mm'); // 14:00
+
+    return (
+      formattedDate.toLowerCase().includes(searchStr) ||
+      dayOfWeek.toLowerCase().includes(searchStr) ||
+      timeStr.includes(searchStr) ||
+      data.totalGeneration.toString().includes(searchStr) ||
+      data.solarGeneration.toString().includes(searchStr) ||
+      data.windGeneration.toString().includes(searchStr) ||
+      data.conventionalGeneration.toString().includes(searchStr) ||
+      data.renewableContribution.toString().includes(searchStr) ||
+      data.efficiencyScore.toString().includes(searchStr)
+    );
+  });
+
+  // Pagination controls
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,11 +258,11 @@ export default function GenerationPage() {
               }
             />
             <button
-              onClick={() => handleExport('csv')}
+              onClick={() => handleExport()}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2C645B] rounded-lg hover:bg-[#2C645B]/90"
             >
               <Download size={16} />
-              Export
+              Export PDF
             </button>
           </div>
         </div>
@@ -320,7 +393,7 @@ export default function GenerationPage() {
                 {/* Enhanced Table View */}
                 <div className="bg-white rounded-lg shadow-sm mt-6">
                   <div className="px-6 py-4 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-medium">Detailed Generation Data</h3>
                       <div className="flex items-center gap-4">
                         <select 
@@ -333,15 +406,30 @@ export default function GenerationPage() {
                           <option value={50}>50 rows</option>
                         </select>
                         <button
-                          onClick={() => handleExport('csv')}
+                          onClick={handleExport}
                           className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
                         >
                           <Download size={16} />
-                          Export
+                          Export PDF
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={18} className="text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search by date, day, time, or values..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2C645B] focus:border-[#2C645B]"
+                      />
+                    </div>
                   </div>
+
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -357,12 +445,12 @@ export default function GenerationPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {generationData
+                        {filteredData
                           .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
                           .map((data, index) => (
                           <tr key={index} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {format(new Date(data.timestamp), 'MMM dd, HH:mm')}
+                              {new Date(data.timestamp).toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {data.totalGeneration.toLocaleString()}
@@ -397,20 +485,20 @@ export default function GenerationPage() {
                       </tbody>
                     </table>
                   </div>
-                  {/* Pagination */}
+                  {/* Enhanced Pagination */}
                   <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
                     <div className="flex-1 flex justify-between sm:hidden">
                       <button
                         onClick={() => setPage(p => Math.max(0, p - 1))}
                         disabled={page === 0}
-                        className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                       >
                         Previous
                       </button>
                       <button
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={(page + 1) * rowsPerPage >= generationData.length}
-                        className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={page === totalPages - 1}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                       >
                         Next
                       </button>
@@ -422,16 +510,64 @@ export default function GenerationPage() {
                           <span className="font-medium">{page * rowsPerPage + 1}</span>
                           {' '}-{' '}
                           <span className="font-medium">
-                            {Math.min((page + 1) * rowsPerPage, generationData.length)}
+                            {Math.min((page + 1) * rowsPerPage, filteredData.length)}
                           </span>
                           {' '}of{' '}
-                          <span className="font-medium">{generationData.length}</span>
+                          <span className="font-medium">{filteredData.length}</span>
                           {' '}results
                         </p>
                       </div>
                       <div>
-                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                          {/* Add pagination buttons here */}
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                          <button
+                            onClick={() => setPage(0)}
+                            disabled={page === 0}
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">First</span>
+                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4 -ml-2" />
+                          </button>
+                          <button
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                            className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Previous</span>
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          
+                          {pageNumbers.map(number => (
+                            <button
+                              key={number}
+                              onClick={() => setPage(number)}
+                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium
+                                ${page === number 
+                                  ? 'z-10 bg-[#2C645B] border-[#2C645B] text-white'
+                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                            >
+                              {number + 1}
+                            </button>
+                          ))}
+
+                          <button
+                            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={page === totalPages - 1}
+                            className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Next</span>
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setPage(totalPages - 1)}
+                            disabled={page === totalPages - 1}
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                          >
+                            <span className="sr-only">Last</span>
+                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className="h-4 w-4 -ml-2" />
+                          </button>
                         </nav>
                       </div>
                     </div>
