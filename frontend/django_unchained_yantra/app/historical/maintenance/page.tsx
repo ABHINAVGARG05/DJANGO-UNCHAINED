@@ -1,7 +1,27 @@
 'use client'
-import React from 'react';
-import Sidebar from '../../components/sidebar';  // Note: lowercase 'sidebar'
-import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import ChartPage from '../ChartPage';
 
-// Rest of the MaintenanceReport component code remains the same... 
+export default function MaintenancePage() {
+  const metrics = [
+    {
+      label: "Total Maintenance",
+      value: "24",
+      change: "4% from last period",
+      trend: "down" as const
+    },
+    {
+      label: "Scheduled",
+      value: "18",
+      change: "2% from last period",
+      trend: "up" as const
+    },
+    {
+      label: "Completed",
+      value: "15",
+      change: "5% from last period",
+      trend: "up" as const
+    }
+  ];
+
+  return <ChartPage type="maintenance" metrics={metrics} />;
+} 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Database } from 'lucide-react';
+import { Home, Database} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -8,7 +8,7 @@ const Sidebar = () => {
   
   const navItems = [
     { icon: Home, label: 'Home', href: '/', active: pathname === '/' },
-    { icon: Database, label: 'Historical Data', href: '/historical', active: pathname === '/historical' }
+    { icon: Database, label: 'Historical Data', href: '/historical', active: pathname.startsWith('/historical') },
   ];
 
   return (
