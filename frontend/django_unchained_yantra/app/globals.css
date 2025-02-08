@@ -3,19 +3,94 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Colors */
+  --primary-dark: #2C645B;
+  --primary-main: #5CA688;
+  --primary-light: #F0F7F5;
+  
+  /* Status Colors */
+  --success: #5CA688;
+  --warning: #FFB125;
+  --error: #FC7854;
+  
+  /* Neutral Colors */
+  --background: #F8FAFC;
+  --card: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-[var(--border)] p-6;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-[var(--primary-dark)] text-white rounded-lg 
+           hover:bg-opacity-90 transition-colors
+           flex items-center gap-2 text-sm font-medium;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-[var(--primary-light)] text-[var(--primary-dark)] rounded-lg 
+           hover:bg-opacity-80 transition-colors
+           flex items-center gap-2 text-sm font-medium;
+  }
+
+  .status-badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-badge-stable {
+    @apply bg-[var(--success)] bg-opacity-10 text-[var(--success)];
+  }
+
+  .status-badge-warning {
+    @apply bg-[var(--warning)] bg-opacity-10 text-[var(--warning)];
+  }
+
+  .status-badge-error {
+    @apply bg-[var(--error)] bg-opacity-10 text-[var(--error)];
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-[var(--border)] rounded-lg text-sm
+           focus:outline-none focus:ring-2 focus:ring-[var(--primary-dark)] focus:ring-opacity-20;
+  }
+
+  .heading-1 {
+    @apply text-2xl font-semibold text-[var(--text-primary)];
+  }
+
+  .heading-2 {
+    @apply text-xl font-semibold text-[var(--text-primary)];
+  }
+
+  .text-body {
+    @apply text-sm text-[var(--text-secondary)];
+  }
+
+  .grid-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .fade-in {
+    @apply transition-opacity duration-200;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50
+           flex items-center justify-center p-4;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply bg-[var(--background)] text-[var(--text-primary)] font-sans;
+  }
 }

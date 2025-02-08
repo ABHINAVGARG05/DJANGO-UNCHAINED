@@ -14,16 +14,20 @@ interface HistoricalCardProps {
 const HistoricalCard = ({ title, description, icon: Icon, href }: HistoricalCardProps) => (
   <Link 
     href={href}
-    className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer group"
+    className="card hover:shadow-md transition-all group"
   >
-    <div className="flex items-start justify-between mb-4">
-      <div className="p-3 rounded-lg bg-[#F0F7F5] group-hover:bg-[#2C645B]/10 transition-colors">
-        <Icon className="text-[#2C645B]" size={24} />
+    <div className="flex items-start justify-between mb-6">
+      <div className="p-4 rounded-lg bg-[var(--primary-light)] 
+                    group-hover:bg-[var(--primary-dark)]/10 transition-colors">
+        <Icon className="text-[var(--primary-dark)]" size={24} />
       </div>
-      <span className="text-xs font-mono text-[#2C645B]/60">View Report →</span>
+      <span className="text-xs font-medium text-[var(--primary-dark)]/60 
+                     group-hover:text-[var(--primary-dark)]">
+        View Report →
+      </span>
     </div>
-    <h3 className="font-mono font-semibold text-[#2C645B] mb-2">{title}</h3>
-    <p className="text-sm font-mono text-[#2C645B]/70">{description}</p>
+    <h3 className="heading-2 text-[var(--primary-dark)] mb-2">{title}</h3>
+    <p className="text-body">{description}</p>
   </Link>
 );
 
