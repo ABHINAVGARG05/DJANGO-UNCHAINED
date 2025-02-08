@@ -1,5 +1,6 @@
 'use client'
 import { useState, useCallback } from 'react';
+import Sidebar from '@/app/components/sideBar';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend, LineProps, Label, BarChart, Bar
@@ -307,290 +308,293 @@ export default function GenerationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Main Content */}
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Power Generation</h1>
-            <p className="text-gray-500">Track and analyze power generation metrics</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar />
+      <div className="flex-1 p-6 w-full md:ml-64">
+        {/* Main Content */}
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Power Generation</h1>
+              <p className="text-gray-500">Track and analyze power generation metrics</p>
+            </div>
+            <div className="flex gap-4">
+              <Popover
+                trigger={
+                  <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <Filter size={16} />
+                    Filters
+                  </button>
+                }
+                content={
+                  <div className="p-4 w-64">
+                    <h3 className="font-medium mb-3">Energy Sources</h3>
+                    {energySources.map(source => (
+                      <label key={source.value} className="flex items-center gap-2 mb-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.includes(source.value)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSources([...selectedSources, source.value]);
+                            } else {
+                              setSelectedSources(selectedSources.filter(s => s !== source.value));
+                            }
+                          }}
+                        />
+                        {source.label}
+                      </label>
+                    ))}
+                  </div>
+                }
+              />
+              <button
+                onClick={() => handleExport()}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2C645B] rounded-lg hover:bg-[#2C645B]/90"
+              >
+                <Download size={16} />
+                Export PDF
+              </button>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <Popover
-              trigger={
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <Filter size={16} />
-                  Filters
+
+          {/* Tabs */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="border-b border-gray-200">
+              <nav className="flex gap-4 px-4" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('visual')}
+                  className={`py-4 px-2 text-sm font-medium border-b-2 ${
+                    activeTab === 'visual'
+                      ? 'border-[#2C645B] text-[#2C645B]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={16} />
+                    Overview
+                  </div>
                 </button>
-              }
-              content={
-                <div className="p-4 w-64">
-                  <h3 className="font-medium mb-3">Energy Sources</h3>
-                  {energySources.map(source => (
-                    <label key={source.value} className="flex items-center gap-2 mb-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedSources.includes(source.value)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedSources([...selectedSources, source.value]);
-                          } else {
-                            setSelectedSources(selectedSources.filter(s => s !== source.value));
-                          }
-                        }}
-                      />
-                      {source.label}
-                    </label>
-                  ))}
-                </div>
-              }
-            />
-            <button
-              onClick={() => handleExport()}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2C645B] rounded-lg hover:bg-[#2C645B]/90"
-            >
-              <Download size={16} />
-              Export PDF
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
-            <nav className="flex gap-4 px-4" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('visual')}
-                className={`py-4 px-2 text-sm font-medium border-b-2 ${
-                  activeTab === 'visual'
-                    ? 'border-[#2C645B] text-[#2C645B]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <BarChart3 size={16} />
-                  Overview
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('table')}
-                className={`py-4 px-2 text-sm font-medium border-b-2 ${
-                  activeTab === 'table'
-                    ? 'border-[#2C645B] text-[#2C645B]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Table2 size={16} />
-                  Detailed Logs
-                </div>
-              </button>
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-4">
-            {activeTab === 'visual' ? (
-              <div className="space-y-6">
-                {/* Summary Metrics */}
-                <div className="grid grid-cols-4 gap-6">
-                  {metrics.map((metric) => (
-                    <div key={metric.label} className="bg-white p-6 rounded-lg shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm text-gray-500">{metric.label}</p>
-                        <div className={`flex items-center gap-1 text-sm ${
-                          metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {metric.trend === 'up' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                          {Math.abs(Number(metric.change))}%
-                        </div>
-                      </div>
-                      <p className="text-2xl font-semibold mt-2">
-                        {metric.value}
-                        <span className="text-sm font-normal text-gray-500 ml-1">
-                          {metric.unit}
-                        </span>
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Charts Grid */}
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Generation Trend */}
-                  <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 className="text-lg font-medium mb-4">Generation Trend</h3>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={generationTrendData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="time" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Legend />
-                          <Line type="monotone" dataKey="actual" stroke="#2C645B" name="Actual" />
-                          <Line type="monotone" dataKey="forecast" stroke="#94A3B8" name="Forecast" strokeDasharray="5 5" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
+                <button
+                  onClick={() => setActiveTab('table')}
+                  className={`py-4 px-2 text-sm font-medium border-b-2 ${
+                    activeTab === 'table'
+                      ? 'border-[#2C645B] text-[#2C645B]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Table2 size={16} />
+                    Detailed Logs
                   </div>
+                </button>
+              </nav>
+            </div>
 
-                  {/* Source Distribution */}
-                  <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 className="text-lg font-medium mb-4">Source Distribution</h3>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={sourceDistributionData}
-                            innerRadius={80}
-                            outerRadius={120}
-                            paddingAngle={2}
-                            dataKey="value"
-                          >
-                            {sourceDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Legend />
-                          <RechartsTooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Efficiency Comparison */}
-                  <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 className="text-lg font-medium mb-4">Efficiency by Source</h3>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={efficiencyData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Bar dataKey="efficiency" fill="#2C645B" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Alerts and Annotations */}
-                  <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 className="text-lg font-medium mb-4">Recent Events</h3>
-                    <div className="space-y-4">
-                      {alerts.map((alert, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                          <AlertCircle size={20} className={
-                            alert.type === 'warning' ? 'text-yellow-500' : 
-                            alert.type === 'error' ? 'text-red-500' : 
-                            'text-blue-500'
-                          } />
-                          <div>
-                            <p className="text-sm font-medium">{alert.title}</p>
-                            <p className="text-sm text-gray-500">{alert.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{alert.timestamp}</p>
+            {/* Tab Content */}
+            <div className="p-4">
+              {activeTab === 'visual' ? (
+                <div className="space-y-6">
+                  {/* Summary Metrics */}
+                  <div className="grid grid-cols-4 gap-6">
+                    {metrics.map((metric) => (
+                      <div key={metric.label} className="bg-white p-6 rounded-lg shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <p className="text-sm text-gray-500">{metric.label}</p>
+                          <div className={`flex items-center gap-1 text-sm ${
+                            metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {metric.trend === 'up' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                            {Math.abs(Number(metric.change))}%
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        <p className="text-2xl font-semibold mt-2">
+                          {metric.value}
+                          <span className="text-sm font-normal text-gray-500 ml-1">
+                            {metric.unit}
+                          </span>
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                {/* Search Bar */}
-                <div className="mb-4">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search size={18} className="text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Search records..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
 
-                {/* Table */}
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total (MW)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solar (MW)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wind (MW)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conventional (MW)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renewable %</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Efficiency</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredData
-                      .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
-                      .map((data, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(data.timestamp).toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {data.totalGeneration.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {data.solarGeneration.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {data.windGeneration.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {data.conventionalGeneration.toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {data.renewableContribution}%
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-green-500"
-                                  style={{ width: `${data.efficiencyScore}%` }}
-                                />
-                              </div>
-                              <span className="ml-2 text-sm text-gray-900">
-                                {data.efficiencyScore}%
-                              </span>
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Generation Trend */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h3 className="text-lg font-medium mb-4">Generation Trend</h3>
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={generationTrendData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="time" />
+                            <YAxis />
+                            <RechartsTooltip />
+                            <Legend />
+                            <Line type="monotone" dataKey="actual" stroke="#2C645B" name="Actual" />
+                            <Line type="monotone" dataKey="forecast" stroke="#94A3B8" name="Forecast" strokeDasharray="5 5" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Source Distribution */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h3 className="text-lg font-medium mb-4">Source Distribution</h3>
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={sourceDistributionData}
+                              innerRadius={80}
+                              outerRadius={120}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {sourceDistributionData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Legend />
+                            <RechartsTooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Efficiency Comparison */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h3 className="text-lg font-medium mb-4">Efficiency by Source</h3>
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={efficiencyData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <RechartsTooltip />
+                            <Bar dataKey="efficiency" fill="#2C645B" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Alerts and Annotations */}
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
+                      <h3 className="text-lg font-medium mb-4">Recent Events</h3>
+                      <div className="space-y-4">
+                        {alerts.map((alert, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <AlertCircle size={20} className={
+                              alert.type === 'warning' ? 'text-yellow-500' : 
+                              alert.type === 'error' ? 'text-red-500' : 
+                              'text-blue-500'
+                            } />
+                            <div>
+                              <p className="text-sm font-medium">{alert.title}</p>
+                              <p className="text-sm text-gray-500">{alert.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">{alert.timestamp}</p>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-
-                {/* Pagination */}
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={() => setPage(Math.max(0, page - 1))}
-                      disabled={page === 0}
-                      className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setPage(page + 1)}
-                      disabled={(page + 1) * rowsPerPage >= filteredData.length}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      Next
-                    </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="overflow-x-auto">
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={18} className="text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search records..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total (MW)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solar (MW)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wind (MW)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conventional (MW)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renewable %</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Efficiency</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredData
+                        .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
+                        .map((data, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(data.timestamp).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {data.totalGeneration.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {data.solarGeneration.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {data.windGeneration.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {data.conventionalGeneration.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {data.renewableContribution}%
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-green-500"
+                                    style={{ width: `${data.efficiencyScore}%` }}
+                                  />
+                                </div>
+                                <span className="ml-2 text-sm text-gray-900">
+                                  {data.efficiencyScore}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination */}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <button
+                        onClick={() => setPage(Math.max(0, page - 1))}
+                        disabled={page === 0}
+                        className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => setPage(page + 1)}
+                        disabled={(page + 1) * rowsPerPage >= filteredData.length}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
