@@ -21,3 +21,9 @@ type HistoryResponse struct {
 	AverageLoad           float64 `json:"average_load"`
 	Period                string  `json:"period"`
 }
+
+
+type Location struct {
+	Latitude  float64 `bson:"latitude" json:"latitude"`
+	Longitude float64 `bson:"longitude" json:"longitude"`
+}

@@ -25,6 +25,7 @@ func main() {
 
 	routes.AuthRoutes(app)
 	routes.SetupRoutes(app)
+	routes.SetupGridDistributionRoutes(app, db.DB)
 	// db.GetCollection("users")
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.Status(http.StatusOK).JSON(&models.Response{
