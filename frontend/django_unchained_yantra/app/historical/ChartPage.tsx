@@ -5,7 +5,13 @@ import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
+const Chart = dynamic(
+  () => import('react-apexcharts'),
+  { 
+    ssr: false,
+    loading: () => <div>Loading chart...</div>
+  }
+);
 
 const DateRangeSelector = () => {
   const ranges = ['Last 7 Days', 'Last 30 Days', 'Last Quarter', 'Last Year'];
@@ -31,31 +37,50 @@ const DateRangeSelector = () => {
 };
 
 interface ChartPageProps {
-  type: 'consumption' | 'generation' | 'maintenance';
+  type: string;
   metrics: {
     label: string;
     value: string;
     change: string;
     trend: 'up' | 'down';
+    description?: string;
   }[];
+  title?: string;
+  description?: string;
+  children?: React.ReactNode;
 }
 
-const ChartPage = ({ type, metrics }: ChartPageProps) => {
-  const router = useRouter();
-  const titles = {
-    consumption: 'Power Consumption Report',
-    generation: 'Power Generation Report',
-    maintenance: 'Maintenance Records'
-  };
-
+const ChartComponent = () => {
   const chartOptions = {
     chart: {
       toolbar: { show: false },
       fontFamily: 'mono'
     },
     colors: ['#2C645B', '#5CA688', '#FFB125'],
-    theme: { mode: 'light' }
+    theme: { mode: 'light' as const }
   };
+
+  return (
+    <Chart 
+      type="line"
+      height={350}
+      options={chartOptions}
+      series={[
+        {
+          name: 'Zone 1',
+          data: [30, 40, 35, 50, 49, 60, 70]
+        },
+        {
+          name: 'Zone 2',
+          data: [20, 35, 40, 45, 39, 55, 65]
+        }
+      ]}
+    />
+  );
+};
+
+const ChartPage = ({ type, metrics, title, description, children }: ChartPageProps) => {
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
@@ -72,8 +97,9 @@ const ChartPage = ({ type, metrics }: ChartPageProps) => {
 
           <div className="mb-8">
             <h2 className="text-2xl font-mono font-semibold text-[#2C645B] mb-4">
-              {titles[type]}
+              {title}
             </h2>
+            <p className="text-gray-600 mb-4">{description}</p>
             <DateRangeSelector />
           </div>
 
@@ -92,21 +118,7 @@ const ChartPage = ({ type, metrics }: ChartPageProps) => {
           <div className="grid gap-6">
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="font-mono font-medium text-[#2C645B] mb-4">Trend Analysis</h3>
-              <Chart 
-                type="line"
-                height={350}
-                options={chartOptions}
-                series={[
-                  {
-                    name: 'Zone 1',
-                    data: [30, 40, 35, 50, 49, 60, 70]
-                  },
-                  {
-                    name: 'Zone 2',
-                    data: [20, 35, 40, 45, 39, 55, 65]
-                  }
-                ]}
-              />
+              <ChartComponent />
             </div>
           </div>
         </div>
