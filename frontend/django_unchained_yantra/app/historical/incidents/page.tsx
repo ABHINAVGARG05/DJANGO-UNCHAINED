@@ -1,10 +1,7 @@
 'use client'
-import { Download, FileDown, AlertTriangle, Clock, Users, Calendar, Filter, Settings } from 'lucide-react';
+import { Download, FileDown, AlertTriangle, Clock, Users,Settings } from 'lucide-react';
 import { useState } from 'react';
 import Sidebar from '../../components/sideBar';
-import Header from '../../components/header';
-import Navigation from '../../components/navigation';
-import RightSidebar from '../../components/rightSideBar';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import Tooltip from '@/app/components/Tooltip';
@@ -35,7 +32,16 @@ interface FilterState {
   status: string[];
 }
 
+const getIncidents = async () => {
+  const response = await fetch("https://yantra-hack3.onrender.com/api/incidents");
+  const data = await response.json();
+  console.log(data);
+  return data;
+}
+
 export default function IncidentsPage() {
+  getIncidents();
+
   const [incidents] = useState<Incident[]>([
     {
       id: "INC-001",
@@ -588,4 +594,4 @@ export default function IncidentsPage() {
       </div>
     </div>
   );
-} 
+}
